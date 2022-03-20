@@ -28,7 +28,7 @@ def list_slice(list_slice_list_in, list_slice_num):
             list_slice_count = list_slice_count + 1
 
     # 尾部未满切片装填
-    if len(list_slice_sublist_out) > 0:
+    if list_slice_sublist_out:
         list_slice_list_out.append(copy.deepcopy(list_slice_sublist_out))
 
     # 返回装填好的切片 list

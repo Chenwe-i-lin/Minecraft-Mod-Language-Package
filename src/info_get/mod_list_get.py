@@ -26,10 +26,11 @@ class GetProjectsFromPage(threading.Thread):
         # 正式爬取
         if self.source == Source.CurseForge:
             mig_page = requests.get(
-                "https://www.curseforge.com/minecraft/mc-mods"
-                "?filter-game-version={}&filter-sort=5&page={}".format(VERSION, self.num),
+                f"https://www.curseforge.com/minecraft/mc-mods?filter-game-version={VERSION}&filter-sort=5&page={self.num}",
                 headers=HEADERS,
-                proxies=PROXIES).text
+                proxies=PROXIES,
+            ).text
+
 
             # 正则抓取所有模组列表
             mig_list = re.findall(r'<a href="/minecraft/mc-mods/(.*?)/download" class="button button--hollow">', mig_page)
@@ -38,10 +39,11 @@ class GetProjectsFromPage(threading.Thread):
         if self.source == Source.FTB:
             # 按最近更新顺序排序，爬 FTB 新包
             modpack_info_get_page = requests.get(
-                "https://www.feed-the-beast.com/modpacks"
-                "?filter-game-version={}&filter-sort=2&page={}".format(VERSION, self.num),
+                f"https://www.feed-the-beast.com/modpacks?filter-game-version={VERSION}&filter-sort=2&page={self.num}",
                 headers=HEADERS,
-                proxies=PROXIES).text
+                proxies=PROXIES,
+            ).text
+
 
             # 正则抓取所有整合列表
             modpack_info_get_list = re.findall(r'<a href="/projects/(.*?)">', modpack_info_get_page)
@@ -60,15 +62,20 @@ class ModpackModInfoGet(threading.Thread):
     def run(self):
         if self.source == Source.CurseForge:
             mmig_page = requests.get(
-                    "https://www.curseforge.com/minecraft/modpacks/{}/files/all?filter-game-version={}".format(self.id, VERSION),
-                    headers=HEADERS,
-                    proxies=PROXIES).text
+                f"https://www.curseforge.com/minecraft/modpacks/{self.id}/files/all?filter-game-version={VERSION}",
+                headers=HEADERS,
+                proxies=PROXIES,
+            ).text
+
             mmig_list = re.findall(r'<a data-action="modpack-file-link" href="/minecraft/modpacks/.*?/files/(\d+)">' ,mmig_page)
-            
+
             if len(mmig_list) != 0:
-                mmig_file_page = requests.get("https://www.curseforge.com/minecraft/modpacks/{}/files/{}".format(self.id, mmig_list[0]),
-                         headers=HEADERS,
-                         proxies=PROXIES).text
+                mmig_file_page = requests.get(
+                    f"https://www.curseforge.com/minecraft/modpacks/{self.id}/files/{mmig_list[0]}",
+                    headers=HEADERS,
+                    proxies=PROXIES,
+                ).text
+
                 mmig_modlist = re.findall(r'<a href="/minecraft/mc-mods/([^/]*)" class="truncate float-left w-full">', mmig_page)
                 for mmig_n in mmig_modlist:
                     if mmig_n not in MOD_LIST and len(mmig_n) > 0:
@@ -80,27 +87,36 @@ class ModpackModInfoGet(threading.Thread):
 
         # 正式爬取
         mmig_page = requests.get(
-            "https://{}/projects/{}/files?filter-game-version={}".format(url_var, self.id, VERSION),
+            f"https://{url_var}/projects/{self.id}/files?filter-game-version={VERSION}",
             headers=HEADERS,
-            proxies=PROXIES).text
+            proxies=PROXIES,
+        ).text
+
 
         # 正则抓取该页面最新版整合
         mmig_list = re.findall(
             r'class="overflow-tip twitch-link" href="/projects/.*?/files/(\d+)"', mmig_page)
-        
+
         # 似乎 FTB 网站只有 release 版的页面才会有模组列表
         mmit_release_type = re.findall(r'<div class="release-phase tip" title="Release">|<div class="beta-phase tip" title="Beta">', mmig_page)
-        release_index = -1
-        for i in range(len(mmit_release_type)):
-            if mmit_release_type[i] == '<div class="release-phase tip" title="Release">':
-                release_index = i
-                break
+        release_index = next(
+            (
+                i
+                for i in range(len(mmit_release_type))
+                if mmit_release_type[i]
+                == '<div class="release-phase tip" title="Release">'
+            ),
+            -1,
+        )
 
         # 提取出模组列表
         if release_index != -1 and len(mmig_list) > release_index:
-            mmig_file_page = requests.get("https://{}/projects/{}/files/{}".format(url_var, self.id, mmig_list[release_index]),
-                                          headers=HEADERS,
-                                          proxies=PROXIES).text
+            mmig_file_page = requests.get(
+                f"https://{url_var}/projects/{self.id}/files/{mmig_list[release_index]}",
+                headers=HEADERS,
+                proxies=PROXIES,
+            ).text
+
 
             # 正则抓取整合所使用的模组列表
             mmig_modlist = re.findall(r'<a href="/projects/(\d+)">', mmig_file_page)
@@ -117,13 +133,17 @@ class ModpackModInfoGet(threading.Thread):
                 # asdflj 的列表并不完备，所有需要进一步检查列表的不完备性
                 if mmig_i not in mmig_new_dict.keys():
                     # 获取重定向连接
-                    mmig_url = requests.get("https://www.feed-the-beast.com/projects/{}".format(mmig_i),
-                                            headers=HEADERS, proxies=PROXIES).url
+                    mmig_url = requests.get(
+                        f"https://www.feed-the-beast.com/projects/{mmig_i}",
+                        headers=HEADERS,
+                        proxies=PROXIES,
+                    ).url
+
                     # 正则抓取处语义化 ID
                     mmig_match = re.findall(r'mc-mods/([^/]*)', mmig_url)
                     # 判定抓取情况，进行存储
                     if len(mmig_match) > 0:
-                        logging.debug("源表中不存在的映射：" + str(mmig_match))
+                        logging.debug(f"源表中不存在的映射：{str(mmig_match)}")
                         mmig_new_dict[mmig_i] = mmig_match[0]
                         # 别忘记这个数据
                         URL_ID_MAP[mmig_match[0]] = mmig_i
@@ -136,15 +156,15 @@ class ModpackModInfoGet(threading.Thread):
 
 def main():
     logging.info("==================  模组列表获取函数开始  ==================")
-    
+
     global MOD_LIST
 
     # 下面是逐个多线程获取信息的部分
-    th_list = []  # 放置线程的 list
-    # 模组页面多线程
-    for num in range(1, MOD_PAGE + 1):
-        # 逐次放入线程
-        th_list.append(GetProjectsFromPage(num, Source.CurseForge))
+    th_list = [
+        GetProjectsFromPage(num, Source.CurseForge)
+        for num in range(1, MOD_PAGE + 1)
+    ]
+
     for th in th_list:
         # 延时 0.5 秒逐个启动线程
         th.start()
@@ -155,9 +175,11 @@ def main():
 
     # 整合页面多线程
     th_list.clear()  # 打扫干净屋子再请客
-    for num in range(1, MODPACK_PAGE + 1):
-        # 逐次放入线程
-        th_list.append(GetProjectsFromPage(num, Source.FTB))
+    th_list.extend(
+        GetProjectsFromPage(num, Source.FTB)
+        for num in range(1, MODPACK_PAGE + 1)
+    )
+
     for th in th_list:
         # 延时 0.5 秒逐个启动线程
         th.start()
@@ -184,13 +206,13 @@ def main():
 
     # 存入整合白名单
     MODPACK_LIST.extend(MODPACK_WHITELIST)
-    logging.info("白名单整合已添加：" + str(MODPACK_WHITELIST))
+    logging.info(f"白名单整合已添加：{str(MODPACK_WHITELIST)}")
 
     # 剔除整合黑名单
     for i in MODPACK_LIST.copy():
         if i in MODPACK_BLACKLIST:
             MODPACK_LIST.remove(i)
-    logging.info("黑名单整合已剔除：" + str(MODPACK_BLACKLIST))
+    logging.info(f"黑名单整合已剔除：{str(MODPACK_BLACKLIST)}")
 
     for modpack in MODPACK_LIST:
         # 逐次放入线程
@@ -206,20 +228,17 @@ def main():
 
     # 添加白名单
     MOD_LIST.extend(MOD_WHITELIST)
-    logging.info("白名单已经添加进模组列表中：" + str(MOD_WHITELIST))
+    logging.info(f"白名单已经添加进模组列表中：{str(MOD_WHITELIST)}")
 
     # 开始剔除黑名单
     for i in MOD_LIST.copy():
         if i in MOD_BLACKLIST:
             MOD_LIST.remove(i)
-    logging.info("黑名单模组列表已剔除：" + str(MOD_BLACKLIST))
+    logging.info(f"黑名单模组列表已剔除：{str(MOD_BLACKLIST)}")
 
     # 开始执行数据存储，出现错误则回滚
     try:
-        # 存储模组列表
-        # 去重，排序
-        MOD_LIST=list(set(MOD_LIST))
-        MOD_LIST.sort()
+        MOD_LIST = sorted(set(MOD_LIST))
         with open(MOD_LIST_FILE, 'w') as f:
             f.write(json.dumps(MOD_LIST, indent=4, sort_keys=True))
 
@@ -227,19 +246,20 @@ def main():
         for k, v in URL_ID_MAP.items():
             # API 获取的数据有可能为空，判定一下
             if len(k) > 0:
-                CURSOR.execute("INSERT OR IGNORE INTO URL_ID_MAP (URL, ID) "
-                               "VALUES ('{}', {});".format(k, v))
+                CURSOR.execute(
+                    f"INSERT OR IGNORE INTO URL_ID_MAP (URL, ID) VALUES ('{k}', {v});"
+                )
+
         CONN.commit()
 
         # 存储模组列表
         for i in MODPACK_LIST:
-            CURSOR.execute("INSERT OR IGNORE INTO MODPACK_LIST (URL) "
-                           "VALUES ('{}');".format(i))
+            CURSOR.execute(f"INSERT OR IGNORE INTO MODPACK_LIST (URL) VALUES ('{i}');")
         CONN.commit()
         logging.info("数据存储完毕")
     except sqlite3.Error as sql_error:
         CONN.rollback()
-        logging.fatal("数据存储失败：" + str(sql_error))
+        logging.fatal(f"数据存储失败：{str(sql_error)}")
 
     logging.info("==================  信息获取函数结束  ==================")
 

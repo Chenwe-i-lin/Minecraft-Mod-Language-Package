@@ -20,8 +20,11 @@ class ModpageInfoGet(threading.Thread):
     def run(self):
         # 正式爬取
         mpig_page = requests.get(
-            "https://www.curseforge.com/minecraft/mc-mods/{}/files/all?filter-game-version={}".format(self.url, VERSION),
-            headers=HEADERS, proxies=PROXIES).text
+            f"https://www.curseforge.com/minecraft/mc-mods/{self.url}/files/all?filter-game-version={VERSION}",
+            headers=HEADERS,
+            proxies=PROXIES,
+        ).text
+
 
         # 正则抓取所有文件列表及其日期
         mpig_newest_file_id = re.findall(r'<a data-action="file-link" href="/minecraft/mc-mods/.*?/files/(\d+)">', mpig_page)
@@ -88,15 +91,19 @@ def main():
     # 存储模组列表，存储之前先清空该表格
     CURSOR.execute("DELETE FROM MOD_INFO;")
     for i in MOD_INFO:
-        CURSOR.execute("INSERT OR IGNORE INTO MOD_INFO (URL, FILE_ID) "
-                       "VALUES ('{}', {});".format(i[0], i[1]))
+        CURSOR.execute(
+            f"INSERT OR IGNORE INTO MOD_INFO (URL, FILE_ID) VALUES ('{i[0]}', {i[1]});"
+        )
+
     CONN.commit()
 
     # 存储需要下载的模组列表，存储之前先清空该表格
     CURSOR.execute("DELETE FROM MOD_DOWNLOAD;")
     for i in MOD_DOWNLOAD:
-        CURSOR.execute("INSERT OR IGNORE INTO MOD_DOWNLOAD (URL, FILE_ID) "
-                       "VALUES ('{}', {});".format(i[0], i[1]))
+        CURSOR.execute(
+            f"INSERT OR IGNORE INTO MOD_DOWNLOAD (URL, FILE_ID) VALUES ('{i[0]}', {i[1]});"
+        )
+
     CONN.commit()
     logging.info("数据存储完毕")
 

@@ -8,18 +8,18 @@ def main(copy_from_path, copy_to_path):
     logging.info("==================  复制函数开始  ==================")
 
     # 先判定文件夹存在与否
-    if not os.path.exists(copy_to_path + "/assets/"):
+    if not os.path.exists(f'{copy_to_path}/assets/'):
         return
 
     # 而后进行特定复制
-    for i in os.listdir(copy_to_path + "/assets/"):
-        logging.info("开始复制处理 " + i + " 模组")
+    for i in os.listdir(f'{copy_to_path}/assets/'):
+        logging.info(f"开始复制处理 {i} 模组")
 
         # 相关路径的构建
-        to_en_us = copy_to_path + "/assets/" + i + "/lang/en_us.lang"  # to 的英文地址
-        to_zh_cn = copy_to_path + "/assets/" + i + "/lang/zh_cn.lang"  # to 的英文地址
-        to_zh_cn_old = copy_to_path + "/assets/" + i + "/lang/zh_cn_old.lang"  # to 的英文地址
-        to_en_us_old = copy_to_path + "/assets/" + i + "/lang/en_us_old.lang"  # to 的参考旧英文地址
+        to_en_us = f'{copy_to_path}/assets/{i}/lang/en_us.lang'
+        to_zh_cn = f'{copy_to_path}/assets/{i}/lang/zh_cn.lang'
+        to_zh_cn_old = f'{copy_to_path}/assets/{i}/lang/zh_cn_old.lang'
+        to_en_us_old = f'{copy_to_path}/assets/{i}/lang/en_us_old.lang'
 
         # 补全其他文件，方便后续 handle
         if not os.path.isfile(to_en_us):
@@ -32,10 +32,10 @@ def main(copy_from_path, copy_to_path):
             open(to_zh_cn_old, "w").close()
 
         # 遍历 weblate 语言文件所在的文件夹，复制指定的文件
-        for j in os.listdir(copy_from_path + "/assets/"):
+        for j in os.listdir(f'{copy_from_path}/assets/'):
             # 相关路径的构建
-            from_en_us = copy_from_path + "/assets/" + j + "/lang/en_us.lang"  # from 的英文文件地址
-            from_zh_cn = copy_from_path + "/assets/" + j + "/lang/zh_cn.lang"  # from 的中文文件地址
+            from_en_us = f'{copy_from_path}/assets/{j}/lang/en_us.lang'
+            from_zh_cn = f'{copy_from_path}/assets/{j}/lang/zh_cn.lang'
 
             # 开始判定和复制
             # 先判定解压出来的是否存在英文文件

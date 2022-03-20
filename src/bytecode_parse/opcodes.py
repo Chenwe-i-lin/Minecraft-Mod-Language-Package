@@ -208,7 +208,14 @@ ca,breakpoint,,reserved for breakpoints in Java debuggers; should not appear in 
 fe,impdep1,,reserved for implementation-dependent operations within debuggers; should not appear in any class file
 ff,impdep2,,reserved for implementation-dependent operations within debuggers; should not appear in any class file)"""
 
-opcodes = {int('0x' + hcode, 0): {"name": name, "params": int(params) if params else 0, "desc": desc} for hcode, name, params, desc in csv.reader(opdata.split('\n'))}
+opcodes = {
+    int(f'0x{hcode}', 0): {
+        "name": name,
+        "params": int(params) if params else 0,
+        "desc": desc,
+    }
+    for hcode, name, params, desc in csv.reader(opdata.split('\n'))
+}
 
 
 def decode(ba):
@@ -228,16 +235,22 @@ def decode(ba):
         elif opc['params'] < 0:
             if b == 170:
                 padd = [next(bs)[1] for _ in range(i % 4)]
-                default = struct.unpack('>l', bytes([next(bs)[1] for _ in range(4)]))[0]
-                low = struct.unpack('>l', bytes([next(bs)[1] for _ in range(4)]))[0]
-                high = struct.unpack('>l', bytes([next(bs)[1] for _ in range(4)]))[0]
+                default = struct.unpack('>l', bytes(next(bs)[1] for _ in range(4)))[0]
+                low = struct.unpack('>l', bytes(next(bs)[1] for _ in range(4)))[0]
+                high = struct.unpack('>l', bytes(next(bs)[1] for _ in range(4)))[0]
                 offsets = [bs.next()[1] for _ in range(high - low + 1)]
                 out.append([opc['name'], padd + [default, low, high] + offsets])
             elif b == 171:
                 padd = [next(bs)[1] for _ in range(i % 4)]
-                default = struct.unpack('>l', bytes([next(bs)[1] for _ in range(4)]))[0]
-                npairs = struct.unpack('>l', bytes([next(bs)[1] for _ in range(4)]))[0]
-                match_offsets = [struct.unpack('>l', bytes([next(bs)[1] for _ in range(4)]))[0] for _ in range(npairs * 2)]
+                default = struct.unpack('>l', bytes(next(bs)[1] for _ in range(4)))[0]
+                npairs = struct.unpack('>l', bytes(next(bs)[1] for _ in range(4)))[0]
+                match_offsets = [
+                    struct.unpack('>l', bytes(next(bs)[1] for _ in range(4)))[
+                        0
+                    ]
+                    for _ in range(npairs * 2)
+                ]
+
                 out.append([opc['name'], padd + [default, npairs] + match_offsets])
             elif b == 196:
                 op1 = next(bs)
@@ -247,7 +260,7 @@ def decode(ba):
                     att = [next(bs)[0] for _ in range(2)]
                 out.append([opc['name'], [op1] + att])
             else:
-                raise Exception('cannot decode bytecode %s %s' % (b, opc))
+                raise Exception(f'cannot decode bytecode {b} {opc}')
         else:
             raise Exception('cannot decode bytecode')
 

@@ -5,7 +5,7 @@ import struct
 
 from . import opcodes
 
-MAGIC_NUMBERS = bytes([int(mv, 0) for mv in ['0xCA', '0xFE', '0xBA', '0xBE']])
+MAGIC_NUMBERS = bytes(int(mv, 0) for mv in ['0xCA', '0xFE', '0xBA', '0xBE'])
 
 JVM_NAMES = {45: 'J2SE 1.1',
              46: 'J2SE 1.2',
@@ -81,7 +81,7 @@ class CPIInt(CPI):
         super(CPIInt, self).__init__(jclass, tag)
 
     def __str__(self):
-        return 'CP int:%s' % self.value
+        return f'CP int:{self.value}'
 
 
 class CPIFloat(CPI):
@@ -92,7 +92,7 @@ class CPIFloat(CPI):
         super(CPIFloat, self).__init__(jclass, tag)
 
     def __str__(self):
-        return 'CP float:%s' % self.value
+        return f'CP float:{self.value}'
 
 
 class CPILong(CPI):
@@ -103,7 +103,7 @@ class CPILong(CPI):
         super(CPILong, self).__init__(jclass, tag)
 
     def __str__(self):
-        return 'CP long:%s' % self.value
+        return f'CP long:{self.value}'
 
 
 class CPIDouble(CPI):
@@ -114,7 +114,7 @@ class CPIDouble(CPI):
         super(CPIDouble, self).__init__(jclass, tag)
 
     def __str__(self):
-        return 'CP double:%s' % self.value
+        return f'CP double:{self.value}'
 
 
 class CPIClassReference(CPI):
@@ -128,7 +128,7 @@ class CPIClassReference(CPI):
         return self.jc.get_cpi(self.name_index)
 
     def __str__(self):
-        return 'CP class reference index:%s name:%s' % (self.name_index, self.get_name().value)
+        return f'CP class reference index:{self.name_index} name:{self.get_name().value}'
 
 
 class CPIStringReference(CPI):
@@ -139,7 +139,7 @@ class CPIStringReference(CPI):
         super(CPIStringReference, self).__init__(jclass, tag)
 
     def __str__(self):
-        return 'CP string reference index: %s' % self.string_index
+        return f'CP string reference index: {self.string_index}'
 
 
 class CPIFMI(CPI):
@@ -153,24 +153,21 @@ class CPIFieldReference(CPIFMI):
     cp_type = CP_TYPE_FIELDREF
 
     def __str__(self):
-        return 'CP field reference: class ref %s name and type descriptor %s' % \
-               (self.class_index, self.name_and_type_index)
+        return f'CP field reference: class ref {self.class_index} name and type descriptor {self.name_and_type_index}'
 
 
 class CPIMethodReference(CPIFMI):
     cp_type = CP_TYPE_METHODREF
 
     def __str__(self):
-        return 'CP method reference: class ref %s name and type descriptor %s' % \
-               (self.class_index, self.name_and_type_index)
+        return f'CP method reference: class ref {self.class_index} name and type descriptor {self.name_and_type_index}'
 
 
 class CPIInterfaceReference(CPIFMI):
     cp_type = CP_TYPE_INFMETHREF
 
     def __str__(self):
-        return 'CP interface reference: class ref %s name and type descriptor %s' % \
-               (self.class_index, self.name_and_type_index)
+        return f'CP interface reference: class ref {self.class_index} name and type descriptor {self.name_and_type_index}'
 
 
 class CPINameAndTypeDescriptor(CPI):
@@ -182,8 +179,7 @@ class CPINameAndTypeDescriptor(CPI):
         super(CPINameAndTypeDescriptor, self).__init__(jclass, tag)
 
     def __str__(self):
-        return 'CP name and type descriptor: name index %s type index %s' % (
-            self.name_index, self.descriptor_index)
+        return f'CP name and type descriptor: name index {self.name_index} type index {self.descriptor_index}'
 
 
 class AttributeInfo:
@@ -197,7 +193,7 @@ class AttributeInfo:
         return self.jc.cpi_val(self.attribute_name_index)
 
     def __str__(self):
-        return 'Attribute: %s' % self.name
+        return f'Attribute: {self.name}'
 
     def __repr__(self):
         return self.__str__()
@@ -213,7 +209,7 @@ class AttributeConstantValue(AttributeInfo):
         return self.jc.cpi_val(self.constantvalue_index)
 
     def __str__(self):
-        return "%s %s" % (super(AttributeConstantValue, self), self.value)
+        return f"{super(AttributeConstantValue, self)} {self.value}"
 
 
 class ExceptionItem:
@@ -241,7 +237,7 @@ class AttributeCode(AttributeInfo):
         return opcodes.decode(self.code)
 
     def __str__(self):
-        return "%s %s" % (super(AttributeCode, self).__str__(), self.opcodes)
+        return f"{super(AttributeCode, self).__str__()} {self.opcodes}"
 
 
 class AttributeException(AttributeInfo):
@@ -365,9 +361,7 @@ class FieldInfo:
         self.attributes = [make_attribute_info(jclass) for _ in range(self.attributes_count)]
 
     def __str__(self):
-        return 'Field attrs:%s name:%s desc:%s att:%s' % \
-               (self.attributes_count, self.jc.cpi_val(self.name_index),
-                self.jc.cpi_val(self.descriptor_index), self.attributes)
+        return f'Field attrs:{self.attributes_count} name:{self.jc.cpi_val(self.name_index)} desc:{self.jc.cpi_val(self.descriptor_index)} att:{self.attributes}'
 
 
 class MethodInfo:
@@ -380,9 +374,7 @@ class MethodInfo:
         self.attributes = [make_attribute_info(jclass) for _ in range(self.attributes_count)]
 
     def __str__(self):
-        return 'Method attrs:%s name:%s desc:%s att:%s' % \
-               (self.attributes_count, self.jc.cpi_val(self.name_index),
-                self.jc.cpi_val(self.descriptor_index), self.attributes)
+        return f'Method attrs:{self.attributes_count} name:{self.jc.cpi_val(self.name_index)} desc:{self.jc.cpi_val(self.descriptor_index)} att:{self.attributes}'
 
 
 # noinspection PyAttributeOutsideInit
@@ -403,13 +395,10 @@ class JavaClass:
         return bytes([next(self.ba_data)])
 
     def read_bytes(self, count):
-        return bytes([next(self.ba_data) for _ in range(count)])
+        return bytes(next(self.ba_data) for _ in range(count))
 
     def unpack(self, fmt, size=1):
-        if size == 1:
-            data = self.read_byte()
-        else:
-            data = self.read_bytes(size)
+        data = self.read_byte() if size == 1 else self.read_bytes(size)
         return struct.unpack(fmt, data)[0]
 
     def read_int8(self):
@@ -485,7 +474,7 @@ class JavaClass:
                         self.read_uint16(),
                         self.read_uint16()))
             else:
-                raise Exception('constant pool unknown tag byte %s' % v)
+                raise Exception(f'constant pool unknown tag byte {v}')
             i += 1
 
     def read_interfaces(self):
@@ -503,7 +492,7 @@ class JavaClass:
     def decode_constant_pool(self):
         mn = self.read_bytes(4)
         if mn != MAGIC_NUMBERS:
-            raise Exception('magic numbers %s do not match %s' % (MAGIC_NUMBERS, mn))
+            raise Exception(f'magic numbers {MAGIC_NUMBERS} do not match {mn}')
         self.minor_version = self.read_uint16()
         self.major_version = self.read_uint16()
         self.constant_pool_size = self.read_uint16()
@@ -512,16 +501,12 @@ class JavaClass:
     
     def get_constant_string(self):
         pool=self.decode_constant_pool()
-        strings=[]
-        for i, cpi in enumerate(pool):
-            if isinstance(cpi,CPIUTF8):
-                strings.append(cpi.value)
-        return strings
+        return [cpi.value for cpi in pool if isinstance(cpi,CPIUTF8)]
 
 if __name__ == '__main__':
     with open(sys.argv[1], 'rb') as f:
         jc = JavaClass(f.read())
         pool=(jc.decode_constant_pool())
-        for i, cpi in enumerate(pool):
+        for cpi in pool:
             if isinstance(cpi,CPIUTF8):
                 print(cpi.value)

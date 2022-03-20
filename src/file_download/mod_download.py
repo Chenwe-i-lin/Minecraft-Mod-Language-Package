@@ -18,28 +18,29 @@ class ModDownloader(threading.Thread):
 
     # 主体程序
     def run(self):
-        with open(self.dirs + "/" + self.filename, 'wb') as mod_downloader_file:
+        with open(f'{self.dirs}/{self.filename}', 'wb') as mod_downloader_file:
             mod_downloader_file.write(requests.get(self.url, headers=HEADERS, proxies=PROXIES).content)
-            logging.debug("文件已写入：" + mod_downloader_file.name)
+            logging.debug(f"文件已写入：{mod_downloader_file.name}")
 
 
 def main(mod_download_tmp_dir):
     logging.info("==================  下载函数开始  ==================")
 
     # 先将数据凑成可用的下载链接，下载文件名
-    tmp_download_url = []
-    for i in MOD_DOWNLOAD:
-        tmp_download_url.append(["https://www.curseforge.com/minecraft/mc-mods/{}/download/{}/file".format(i[0], i[1]),
-                                 i[0]])
+    tmp_download_url = [
+        [
+            f"https://www.curseforge.com/minecraft/mc-mods/{i[0]}/download/{i[1]}/file",
+            i[0],
+        ]
+        for i in MOD_DOWNLOAD
+    ]
 
     # 而后进行切片
     tmp_download_url_slice = list_slice(tmp_download_url, THREADS_NUM)
 
     logging.info("开始下载需要更新的模组")
     for i in tmp_download_url_slice:
-        th = []
-        for j in i:
-            th.append(ModDownloader(j[0], j[1], mod_download_tmp_dir))
+        th = [ModDownloader(j[0], j[1], mod_download_tmp_dir) for j in i]
         for j in range(len(i)):
             th[j].start()
             time.sleep(0.5)

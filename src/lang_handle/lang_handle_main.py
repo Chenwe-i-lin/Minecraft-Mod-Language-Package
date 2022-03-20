@@ -18,15 +18,11 @@ def normal_language_file_to_dict(nlftd_file_path):
 
 # 普通语言文件的书写
 def normal_language_file_write(nlfw_file_path, nlfw_dict):
-    # 获取 key
-    nlfw_key = list(nlfw_dict.keys())
-    # key 进行排序
-    nlfw_key.sort()
-
+    nlfw_key = sorted(nlfw_dict.keys())
     # 写成语言文件
     with open(nlfw_file_path, "w", encoding="utf-8", errors="replace") as nlfw_f:
         for nlfw_i in nlfw_key:
-            nlfw_f.writelines(nlfw_i + "=" + nlfw_dict[nlfw_i])
+            nlfw_f.writelines(f'{nlfw_i}={nlfw_dict[nlfw_i]}')
 
 
 # 读取带有 #PARSE_ESCAPES 的语言文件，处理成 dict
@@ -38,11 +34,7 @@ def properties_language_file_to_dict(plftd_file_path):
 
 # 带有 #PARSE_ESCAPES 的语言文件的书写
 def properties_language_file_write(plfw_file_path, plfw_dict):
-    # 获取 key
-    plfw_key = list(plfw_dict.keys())
-    # key 进行排序
-    plfw_key.sort()
-
+    plfw_key = sorted(plfw_dict.keys())
     # 写成语言文件
     with open(plfw_file_path, "w", encoding="utf-8", errors="replace") as plfw_f:
         # 先写标识符 #PARSE_ESCAPES
@@ -54,19 +46,13 @@ def properties_language_file_write(plfw_file_path, plfw_dict):
             nlfw_i_replace = nlfw_i.replace(":", "\\:").replace("=", "\\=")
             nlfw_v_replace = plfw_dict[nlfw_i].replace("\n", "\\n")
             # 而后才写入
-            plfw_f.writelines(nlfw_i_replace + "=" + nlfw_v_replace + "\n")
+            plfw_f.writelines(f'{nlfw_i_replace}={nlfw_v_replace}' + "\n")
 
 
 # 判定一个文件是否包含 #PARSE_ESCAPES
 def is_properties_language_file(iplf_file_path):
     with open(iplf_file_path, "r", encoding="utf-8", errors="replace") as iplf_f:
-        # 逐行读取文本
-        for iplf_i in iplf_f.readlines():
-            # 如果存在此关键词，直接结束函数，返回 True
-            if "#PARSE_ESCAPES" in iplf_i:
-                return True
-        # 逐行遍历完毕仍未发现此关键词，说明不存在，返回 False
-        return False
+        return any("#PARSE_ESCAPES" in iplf_i for iplf_i in iplf_f.readlines())
 
 
 # 判定语言文件类型，然后将其转换成 dict 的函数
@@ -123,8 +109,8 @@ def four_dict_handle(fdh_dict_en, fdh_dict_en_old, fdh_dict_zh, fdh_dict_zh_old)
 
 def main(handle_assets_path, handle_project_path):
     logging.info("==================  主体处理程序开始  ==================")
-    for i in os.listdir(handle_assets_path + "/assets"):
-        logging.info("正在处理 " + i + " 文件夹……")
+    for i in os.listdir(f'{handle_assets_path}/assets'):
+        logging.info(f"正在处理 {i} 文件夹……")
 
         ''' 这一部分因为存在颇多的处理错误问题，目前暂定注释掉
 
@@ -152,7 +138,10 @@ def main(handle_assets_path, handle_project_path):
         
         '''
 
-    dir_util.copy_tree(handle_assets_path + "/assets", handle_project_path + "/assets")
+    dir_util.copy_tree(
+        f'{handle_assets_path}/assets', handle_project_path + "/assets"
+    )
+
     logging.info("==================  主体处理程序结束  ==================")
 
 

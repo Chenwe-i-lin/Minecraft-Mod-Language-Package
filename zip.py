@@ -19,21 +19,21 @@ if __name__ == '__main__':
     # 打包处理主程序
     for modid in os.listdir('project/assets'):
         # 各个语言文件路径构建
-        zh_cn_path = 'project/assets/{}/lang/zh_cn.lang'.format(modid)
-        zh_cn_old_path = 'project/assets/{}/lang/zh_cn_old.lang'.format(modid)
-        en_us_path = 'project/assets/{}/lang/en_us.lang'.format(modid)
-        en_us_old_path = 'project/assets/{}/lang/en_us_old.lang'.format(modid)
+        zh_cn_path = f'project/assets/{modid}/lang/zh_cn.lang'
+        zh_cn_old_path = f'project/assets/{modid}/lang/zh_cn_old.lang'
+        en_us_path = f'project/assets/{modid}/lang/en_us.lang'
+        en_us_old_path = f'project/assets/{modid}/lang/en_us_old.lang'
 
         # 剔除 en_us
-        os.system('rm -rf {}'.format(en_us_path))
+        os.system(f'rm -rf {en_us_path}')
         # 剔除 en_us_old
-        os.system('rm -rf {}'.format(en_us_old_path))
+        os.system(f'rm -rf {en_us_old_path}')
         # 剔除 zh_cn_old
-        os.system('rm -rf {}'.format(zh_cn_old_path))
+        os.system(f'rm -rf {zh_cn_old_path}')
 
         # zh_cn 存在，且文件为空
         if os.path.isfile(zh_cn_path) and os.path.getsize(zh_cn_path) == 0:
-            os.system('rm -rf {}'.format(zh_cn_path))
+            os.system(f'rm -rf {zh_cn_path}')
 
     os.system('mv ./project/assets ./')  # 移动资源包文件夹到主目录下
     os.system('mv ./project/pack.mcmeta ./')  # 移动 pack.mcmeta 文件到主目录下
